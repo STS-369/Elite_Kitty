@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitty Soldier: Rambo Cat vs. The Rats</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
+</head>
+<body>
+    <div id="game-container"></div>
+    <div id="ui-overlay">
+        <div id="start-screen" class="overlay-screen">
+            <h1>KITTY SOLDIER</h1>
+            <p>Rambo Cat vs. The Rat Infestation</p>
+            <button id="start-btn">DEPLOY MISSION</button>
+            <div class="controls-hint">
+                <p>WASD/ARROWS: Move & Jump</p>
+                <p>SPACE/Z: Fire Yarn Balls</p>
+            </div>
+        </div>
+        <div id="game-over-screen" class="overlay-screen hidden">
+            <h1>MISSION FAILED</h1>
+            <p id="final-score">Score: 0</p>
+            <button id="restart-btn">REDEPLOY</button>
+        </div>
+    </div>
+    <script src="levels.js"></script>
+    <script src="kitty-soldier.js"></script>
+</body>
+</html>
