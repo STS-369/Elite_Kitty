@@ -216,10 +216,19 @@ function doSetupLevel() {
     tutorialIndex = 0;
     currentWave = 0;
     levelCompletePending = false;
+    // Apply permanent credit upgrades
+    if (typeof applyPermanentUpgrades === 'function') {
+        applyPermanentUpgrades();
+    }
 
     // Hide all overlays and show HUD
     hideAllOverlays();
     document.getElementById('hud').classList.remove('hidden');
+
+    // Update credit display in HUD
+    if (typeof CreditWallet !== 'undefined') {
+        CreditWallet.updateHUDCredits();
+    }
 
     // Background
     scene.cameras.main.setBackgroundColor(level.bg);
@@ -597,8 +606,15 @@ function killEnemy(enemy, isSilent) {
 
     var totalScore = (baseScore + bonusScore) * GameState.comboMultiplier;
     GameState.score += totalScore;
-
     var text = isSilent ? 'SILENT +' + totalScore : '+' + totalScore;
+    // Credit earnings
+    if (typeof CreditWallet !== 'undefined') {
+        CreditWallet.earnOnKill(isSilent);
+        if (GameState.combo >= 3) {
+            CreditWallet.earnOnCombo(GameState.combo);
+        }
+    }
+
     var color = isSilent ? '#00ff88' : (GameState.comboMultiplier > 1 ? '#ffff00' : '#ffffff');
     showFloatingText(enemy.x, enemy.y - 10, text, color, isSilent ? 20 : 16, 1000);
 
@@ -630,6 +646,10 @@ function handleBulletHitBoss(bullet, bossObj) {
 function killBoss() {
     GameState.kills++;
     GameState.score += 200 * GameState.comboMultiplier;
+    // Credit earnings for boss kill
+    if (typeof CreditWallet !== 'undefined') {
+        CreditWallet.earnOnBossKill();
+    }
     spawnDeathParticles(boss.x, boss.y, 0xff00ff, 30);
     showFloatingText(boss.x, boss.y - 30, 'BOSS DEFEATED! +200', '#ff00ff', 28, 2000);
     if (boss.attackEvent) boss.attackEvent.destroy();
@@ -764,6 +784,10 @@ function completeLevel() {
 
     SaveManager.addCoins(coins);
     SaveManager.updateLevelStars(GameState.currentLevel, stars);
+    // Credit earnings for level completion
+    if (typeof CreditWallet !== 'undefined') {
+        CreditWallet.earnOnLevelComplete(stars);
+    }
 
     // Unlock weapons by progression
     if (GameState.currentLevel >= 2 && GameState.weapons.indexOf('shotgun') < 0)
@@ -787,6 +811,13 @@ function completeLevel() {
 function triggerGameOver() {
     gameRunning = false;
     gamePaused = false;
+
+    // Check auto-revive before game over
+    if (typeof checkAutoRevive === 'function' && checkAutoRevive()) {
+        gameRunning = true;
+        return;
+    }
+
     document.getElementById('hud').classList.add('hidden');
     if (player) { player.setTint(0xff0000); spawnDeathParticles(player.x, player.y, 0xff0055, 20); }
     SaveManager.addHighScore(GameState.score, GameState.currentLevel, GameState.kills, GameState.stealthKills, GameState.maxCombo);
@@ -1190,6 +1221,10 @@ document.addEventListener('DOMContentLoaded', function() {
         gamePaused = false;
         levelCompletePending = false;
         GameState.resetForNewGame();
+        // Check daily login bonus
+        if (typeof CreditWallet !== 'undefined') {
+            CreditWallet.grantDailyBonus();
+        }
         doSetupLevel();
     };
     document.getElementById('continue-btn').onclick = function() {
@@ -1282,6 +1317,14 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     document.getElementById('skins-back-btn').onclick = function() { showOverlay('start-screen'); };
 
+    // Store
+    document.getElementById('store-btn').onclick = function() {
+        if (typeof openStore === 'function') openStore('skins');
+    };
+    document.getElementById('store-back-btn').onclick = function() {
+        if (gameRunning && gamePaused) showOverlay('pause-screen');
+        else showOverlay('start-screen');
+    };
     // Donate
     document.getElementById('donate-btn').onclick = function() {
         alert('Thank you for your support!\n\n(Donation link placeholder)');

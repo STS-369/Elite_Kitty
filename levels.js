@@ -34,7 +34,10 @@ const SkinData = {
     blue:    { name: "Navy SEAL",     primaryColor: 0x0066ff, premium: false },
     gold:    { name: "Golden Warrior", primaryColor: 0xffcc00, premium: true, cost: 500 },
     ninja:   { name: "Shadow Ninja",  primaryColor: 0x222222, premium: true, cost: 1000 },
-    neon:    { name: "Neon Cyber",     primaryColor: 0x00ff88, premium: true, cost: 750 }
+    neon:    { name: "Neon Cyber",     primaryColor: 0x00ff88, premium: true, cost: 750 },
+    red:     { name: "Blood Commander", primaryColor: 0xcc0000, premium: true, cost: 3000 },
+    white:   { name: "Arctic Ops",     primaryColor: 0xcccccc, premium: true, cost: 4000 },
+    max:     { name: "Shadow Lord",    primaryColor: 0x4400aa, premium: true, cost: 5000 }
 };
 
 const LevelData = {

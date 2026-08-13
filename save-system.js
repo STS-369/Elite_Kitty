@@ -72,14 +72,14 @@ var SaveManager = {
             return data ? JSON.parse(data) : {
                 unlockedSkins: ['default', 'blue'],
                 currentSkin: 'default',
-                totalStars: 0, coins: 0,
+                totalStars: 0, coins: 0, credits: 0,
                 levelStars: {}, highScore: 0
             };
         } catch (e) {
             return {
                 unlockedSkins: ['default', 'blue'],
                 currentSkin: 'default',
-                totalStars: 0, coins: 0,
+                totalStars: 0, coins: 0, credits: 0,
                 levelStars: {}, highScore: 0
             };
         }

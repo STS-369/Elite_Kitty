@@ -20,6 +20,7 @@
                 <span id="hud-health-text">100</span>
             </div>
             <div id="hud-score" class="hud-score">Score: 0</div>
+            <div id="hud-credits" class="hud-credits">🪙 0</div>
             <div id="hud-level" class="hud-level">Lv1</div>
         </div>
         <div class="hud-row">
@@ -60,6 +61,7 @@
             </div>
             <div class="monetization-row">
                 <button id="skins-btn" class="menu-btn small skins">🎨 SKINS</button>
+                <button id="store-btn" class="menu-btn small store">🪙 STORE</button>
                 <button id="donate-btn" class="menu-btn small donate">☕ Donate</button>
             </div>
         </div>
@@ -157,6 +159,18 @@
         </div>
     </div>
 
+    <!-- CREDIT STORE -->
+    <div id="store-screen" class="overlay-screen hidden">
+        <div class="overlay-content wide">
+            <h2>🪙 CREDIT STORE</h2>
+            <div id="store-content" class="store-content"></div>
+            <button id="store-back-btn" class="menu-btn">← BACK</button>
+        </div>
+    </div>
+
+    <!-- CREDIT POPUP -->
+    <div id="credit-popup" class="credit-popup"></div>
+
     <!-- AD PLACEHOLDER -->
     <div id="ad-screen" class="overlay-screen hidden">
         <div class="overlay-content">
@@ -174,6 +188,7 @@
 
     <script src="levels.js"></script>
     <script src="save-system.js"></script>
+    <script src="credit-system.js"></script>
     <script src="kitty-soldier.js"></script>
 </body>
 </html>
