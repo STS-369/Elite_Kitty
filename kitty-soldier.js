@@ -27,23 +27,102 @@ var touchState = { left: false, right: false, up: false, fire: false, weapon: nu
 function generateTextures(sc) {
     var g;
 
-    // Player cat soldier
+    // Player - Kitty Commando Ninja (Rambo Cat)
+    // Cat head with pointed ears, green eyes, red headband, ninja mask, tactical outfit
     g = sc.make.graphics({ add: false });
-    g.fillStyle(0xff0055); g.fillRoundedRect(6, 10, 20, 16, 3);
-    g.fillStyle(0xffccaa); g.fillRoundedRect(8, 0, 16, 12, 4);
-    g.fillStyle(0xff0055); g.fillTriangle(8, 2, 12, 0, 12, 6);
-    g.fillTriangle(20, 2, 24, 0, 20, 6);
-    g.fillStyle(0xff99aa); g.fillTriangle(9, 3, 11, 1, 11, 5);
-    g.fillTriangle(21, 3, 23, 1, 19, 5);
-    g.fillStyle(0x00ff00); g.fillRect(11, 3, 3, 3); g.fillRect(18, 3, 3, 3);
-    g.fillStyle(0x000000); g.fillRect(12, 4, 1, 1); g.fillRect(19, 4, 1, 1);
-    g.fillStyle(0xff99aa); g.fillRect(15, 7, 2, 1);
-    g.fillStyle(0x000000); g.fillRect(14, 8, 4, 1);
-    g.fillStyle(0xcc0000); g.fillRect(7, 1, 18, 2);
-    g.fillStyle(0x444444); g.fillRect(6, 20, 20, 3);
-    g.fillStyle(0xffcc00); g.fillRect(14, 20, 4, 3);
-    g.fillStyle(0x333333); g.fillRect(9, 26, 5, 6); g.fillRect(18, 26, 5, 6);
-    g.fillStyle(0x222222); g.fillRect(8, 30, 6, 2); g.fillRect(18, 30, 6, 2);
+
+    // --- Tail (behind body) ---
+    g.fillStyle(0x888888);
+    g.fillRoundedRect(22, 16, 4, 10, 2);
+    g.fillStyle(0x777777);
+    g.fillRoundedRect(24, 14, 4, 6, 2);
+
+    // --- Cat head (gray fur) ---
+    g.fillStyle(0x888888);
+    g.fillRoundedRect(8, 1, 16, 12, 3);
+
+    // --- Pointed cat ears ---
+    g.fillStyle(0x888888);
+    g.fillTriangle(9, 4, 13, -1, 13, 5);   // left ear outer
+    g.fillTriangle(19, 4, 23, -1, 19, 5);   // right ear outer
+    g.fillStyle(0xff99aa);
+    g.fillTriangle(10, 4, 12, 1, 12, 4);    // left ear inner
+    g.fillTriangle(20, 4, 22, 1, 20, 4);    // right ear inner
+
+    // --- Red headband (Rambo style) ---
+    g.fillStyle(0xcc0000);
+    g.fillRect(7, 1, 18, 3);
+    // Headband tails hanging down right side
+    g.fillStyle(0xcc0000);
+    g.fillRect(23, 2, 2, 6);
+    g.fillRect(25, 3, 2, 5);
+
+    // --- Cat eyes (bright green with slit pupils) ---
+    g.fillStyle(0x00ff00);
+    g.fillRect(11, 4, 3, 3);    // left eye
+    g.fillRect(18, 4, 3, 3);    // right eye
+    g.fillStyle(0x000000);
+    g.fillRect(12, 5, 1, 1);    // left pupil
+    g.fillRect(19, 5, 1, 1);    // right pupil
+
+    // --- Cat nose ---
+    g.fillStyle(0xff99aa);
+    g.fillRect(15, 7, 2, 1);
+
+    // --- Whiskers (white lines) ---
+    g.fillStyle(0xcccccc);
+    g.fillRect(10, 7, 4, 1);    // left whisker
+    g.fillRect(18, 7, 4, 1);    // right whisker
+    g.fillRect(11, 8, 3, 1);    // left whisker lower
+    g.fillRect(18, 8, 3, 1);    // right whisker lower
+
+    // --- Ninja mask (dark, covering lower face) ---
+    g.fillStyle(0x333333);
+    g.fillRect(9, 9, 14, 4);
+    g.fillStyle(0x444444);
+    g.fillRect(9, 9, 14, 1);    // mask highlight edge
+
+    // --- Tactical vest / body armor (dark green) ---
+    g.fillStyle(0x334433);
+    g.fillRoundedRect(7, 13, 18, 9, 2);
+
+    // Vest details - shoulder pads
+    g.fillStyle(0x445544);
+    g.fillRect(7, 13, 5, 3);    // left shoulder
+    g.fillRect(20, 13, 5, 3);   // right shoulder
+
+    // Vest center line
+    g.fillStyle(0x223322);
+    g.fillRect(15, 14, 2, 7);
+
+    // Arm holes / sides
+    g.fillStyle(0x888888);
+    g.fillRect(7, 15, 2, 5);    // left arm
+    g.fillRect(23, 15, 2, 5);   // right arm
+
+    // --- Utility belt ---
+    g.fillStyle(0x885533);
+    g.fillRect(7, 22, 18, 2);
+    g.fillStyle(0xcc9955);
+    g.fillRect(14, 22, 4, 2);   // belt buckle
+    // Pouches
+    g.fillStyle(0x664422);
+    g.fillRect(9, 22, 3, 2);    // left pouch
+    g.fillRect(20, 22, 3, 2);   // right pouch
+
+    // --- Dark tactical pants ---
+    g.fillStyle(0x333333);
+    g.fillRect(8, 24, 6, 4);    // left leg
+    g.fillRect(18, 24, 6, 4);   // right leg
+
+    // --- Combat boots ---
+    g.fillStyle(0x222222);
+    g.fillRect(7, 28, 7, 3);    // left boot
+    g.fillRect(18, 28, 7, 3);   // right boot
+    g.fillStyle(0x444444);
+    g.fillRect(7, 28, 7, 1);    // left boot top
+    g.fillRect(18, 28, 7, 1);   // right boot top
+
     g.generateTexture('player', 32, 32); g.destroy();
 
     // Enemy rat
