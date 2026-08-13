@@ -21,7 +21,7 @@ var previousScreen = 'start-screen';
 
 // ---- Mobile Detection & Touch State ----
 var isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || ('ontouchstart' in window);
-var touchState = { left: false, right: false, up: false, fire: false, weapon: null };
+var touchState = { left: false, right: false, up: false, fire: false, weapon: null, jumpQueued: false };
 
 // ---- Texture Generation ----
 function generateTextures(sc) {
@@ -399,6 +399,12 @@ function doSetupLevel() {
     spawnInitialPowerups(level);
 
     // Level intro text
+    // Camera: zoom in and follow the player
+    scene.cameras.main.startFollow(player, true, 0.1, 0.1);
+    scene.cameras.main.setZoom(1.5);
+    scene.cameras.main.setBounds(0, 0, 800, 600);
+    scene.cameras.main.setDeadzone(100, 50);
+
     showFloatingText(400, 300, level.name, '#ff8800', 40, 2000);
     if (level.stealth) {
         scene.time.delayedCall(500, function() {
@@ -419,7 +425,7 @@ function handleMovement() {
     var speed = GameState.speedBoost ? 300 : 200;
     var left = cursors.left.isDown || (aKey && aKey.isDown) || touchState.left;
     var right = cursors.right.isDown || (dKey && dKey.isDown) || touchState.right;
-    var jump = cursors.up.isDown || (wKey && wKey.isDown) || touchState.up;
+    var jump = cursors.up.isDown || (wKey && wKey.isDown) || touchState.up || touchState.jumpQueued;
     if (left) {
         player.setVelocityX(-speed);
         player.flipX = true;
@@ -431,6 +437,7 @@ function handleMovement() {
     }
     if (jump && player.body.touching.down) {
         player.setVelocityY(-500);
+        touchState.jumpQueued = false;
     }
 }
 
@@ -1554,18 +1561,16 @@ function initTouchControls() {
         }, { passive: true });
     }
 
-    // Jump button
+    // Jump button - uses queued flag to survive short taps
     if (touchJump) {
         touchJump.addEventListener('touchstart', function(e) {
             e.preventDefault();
-            touchState.up = true;
+            touchState.jumpQueued = true;
         }, { passive: false });
         touchJump.addEventListener('touchend', function(e) {
             e.preventDefault();
-            touchState.up = false;
         }, { passive: false });
         touchJump.addEventListener('touchcancel', function(e) {
-            touchState.up = false;
         }, { passive: true });
     }
 
