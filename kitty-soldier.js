@@ -19,6 +19,10 @@ var lastFireTime = 0;
 var saveMode = 'save';
 var previousScreen = 'start-screen';
 
+// ---- Mobile Detection & Touch State ----
+var isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || ('ontouchstart' in window);
+var touchState = { left: false, right: false, up: false, fire: false, weapon: null };
+
 // ---- Texture Generation ----
 function generateTextures(sc) {
     var g;
@@ -124,6 +128,12 @@ var config = {
     width: 800,
     height: 600,
     parent: 'game-container',
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        min: { width: 320, height: 240 },
+        max: { width: 1600, height: 1200 }
+    },
     physics: {
         default: 'arcade',
         arcade: {
@@ -137,7 +147,10 @@ var config = {
         update: update
     },
     pixelArt: true,
-    roundPixels: true
+    roundPixels: true,
+    input: {
+        activePointers: 3
+    }
 };
 
 // ---- Phaser Lifecycle ----
@@ -322,12 +335,12 @@ function doSetupLevel() {
 }
 
 // ---- Movement ----
+// ---- Movement ----
 function handleMovement() {
     var speed = GameState.speedBoost ? 300 : 200;
-    var left = cursors.left.isDown || (aKey && aKey.isDown);
-    var right = cursors.right.isDown || (dKey && dKey.isDown);
-    var jump = cursors.up.isDown || (wKey && wKey.isDown);
-
+    var left = cursors.left.isDown || (aKey && aKey.isDown) || touchState.left;
+    var right = cursors.right.isDown || (dKey && dKey.isDown) || touchState.right;
+    var jump = cursors.up.isDown || (wKey && wKey.isDown) || touchState.up;
     if (left) {
         player.setVelocityX(-speed);
         player.flipX = true;
@@ -337,7 +350,6 @@ function handleMovement() {
     } else {
         player.setVelocityX(0);
     }
-
     if (jump && player.body.touching.down) {
         player.setVelocityY(-500);
     }
@@ -345,7 +357,7 @@ function handleMovement() {
 
 // ---- Shooting ----
 function handleShooting(time) {
-    if (fireKey.isDown) {
+    if (fireKey.isDown || touchState.fire) {
         var weapon = WeaponData[GameState.currentWeapon];
         if (time - lastFireTime >= weapon.fireRate) {
             fireWeapon();
@@ -1335,7 +1347,161 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('ad-screen').classList.add('hidden');
         if (_adCallback) { _adCallback(); _adCallback = null; }
     };
+
+    // ---- Touch Controls Setup ----
+    if (isMobileDevice) {
+        initTouchControls();
+    }
+
+    // Handle orientation change
+    window.addEventListener('orientationchange', function() {
+        setTimeout(function() {
+            if (game && game.scale) {
+                game.scale.refresh();
+            }
+        }, 200);
+    });
+
+    // Handle resize
+    window.addEventListener('resize', function() {
+        if (game && game.scale) {
+            game.scale.refresh();
+        }
+    });
 });
+
+// ---- Touch Controls ----
+function initTouchControls() {
+    var touchControls = document.getElementById('touch-controls');
+    var joystickBase = document.getElementById('joystick-base');
+    var joystickKnob = document.getElementById('joystick-knob');
+    var joystickZone = document.getElementById('joystick-zone');
+    var touchFire = document.getElementById('touch-fire');
+    var touchJump = document.getElementById('touch-jump');
+    var touchW1 = document.getElementById('touch-weapon1');
+    var touchW2 = document.getElementById('touch-weapon2');
+    var touchW3 = document.getElementById('touch-weapon3');
+
+    if (!touchControls || !joystickBase) return;
+
+    // Show touch controls when game is running
+    var observer = new MutationObserver(function() {
+        var hud = document.getElementById('hud');
+        if (hud && !hud.classList.contains('hidden') && gameRunning) {
+            touchControls.classList.remove('hidden');
+        } else {
+            touchControls.classList.add('hidden');
+        }
+    });
+    observer.observe(document.getElementById('hud'), { attributes: true, attributeFilter: ['class'] });
+
+    // Joystick logic
+    var joystickActive = false;
+    var joystickTouchId = null;
+    var joystickCenter = { x: 0, y: 0 };
+    var maxDist = 40;
+
+    function handleJoystickMove(clientX, clientY) {
+        var dx = clientX - joystickCenter.x;
+        var dy = clientY - joystickCenter.y;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > maxDist) {
+            dx = (dx / dist) * maxDist;
+            dy = (dy / dist) * maxDist;
+        }
+        joystickKnob.style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
+
+        // Determine direction
+        var threshold = maxDist * 0.3;
+        touchState.left = dx < -threshold;
+        touchState.right = dx > threshold;
+        touchState.up = dy < -threshold;
+    }
+
+    function resetJoystick() {
+        joystickKnob.style.transform = 'translate(0, 0)';
+        touchState.left = false;
+        touchState.right = false;
+        touchState.up = false;
+    }
+
+    joystickZone.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        var touch = e.changedTouches[0];
+        joystickActive = true;
+        joystickTouchId = touch.identifier;
+        var rect = joystickBase.getBoundingClientRect();
+        joystickCenter.x = rect.left + rect.width / 2;
+        joystickCenter.y = rect.top + rect.height / 2;
+        handleJoystickMove(touch.clientX, touch.clientY);
+    }, { passive: false });
+
+    joystickZone.addEventListener('touchmove', function(e) {
+        e.preventDefault();
+        if (!joystickActive) return;
+        for (var i = 0; i < e.changedTouches.length; i++) {
+            if (e.changedTouches[i].identifier === joystickTouchId) {
+                handleJoystickMove(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
+                break;
+            }
+        }
+    }, { passive: false });
+
+    function endJoystick(e) {
+        for (var i = 0; i < e.changedTouches.length; i++) {
+            if (e.changedTouches[i].identifier === joystickTouchId) {
+                joystickActive = false;
+                joystickTouchId = null;
+                resetJoystick();
+                break;
+            }
+        }
+    }
+    joystickZone.addEventListener('touchend', endJoystick, { passive: true });
+    joystickZone.addEventListener('touchcancel', endJoystick, { passive: true });
+
+    // Fire button (hold to fire)
+    if (touchFire) {
+        touchFire.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            touchState.fire = true;
+        }, { passive: false });
+        touchFire.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            touchState.fire = false;
+        }, { passive: false });
+        touchFire.addEventListener('touchcancel', function(e) {
+            touchState.fire = false;
+        }, { passive: true });
+    }
+
+    // Jump button
+    if (touchJump) {
+        touchJump.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            touchState.up = true;
+        }, { passive: false });
+        touchJump.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            touchState.up = false;
+        }, { passive: false });
+        touchJump.addEventListener('touchcancel', function(e) {
+            touchState.up = false;
+        }, { passive: true });
+    }
+
+    // Weapon switch buttons
+    function setupWeaponBtn(btn, weaponName) {
+        if (!btn) return;
+        btn.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            switchToWeapon(weaponName);
+        }, { passive: false });
+    }
+    setupWeaponBtn(touchW1, 'pistol');
+    setupWeaponBtn(touchW2, 'shotgun');
+    setupWeaponBtn(touchW3, 'rifle');
+}
 
 // ---- Initialize Game ----
 game = new Phaser.Game(config);

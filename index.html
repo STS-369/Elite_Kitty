@@ -2,13 +2,29 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Elite Kitty - Rambo Cat vs. The Rats</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
 </head>
 <body>
     <div id="game-container"></div>
+
+    <!-- Touch Controls (Mobile) -->
+    <div id="touch-controls" class="touch-controls hidden">
+        <div id="joystick-zone" class="joystick-zone">
+            <div id="joystick-base" class="joystick-base">
+                <div id="joystick-knob" class="joystick-knob"></div>
+            </div>
+        </div>
+        <div class="touch-actions">
+            <button id="touch-jump" class="touch-btn jump-btn">⬆</button>
+            <button id="touch-fire" class="touch-btn fire-btn">🔥</button>
+            <button id="touch-weapon1" class="touch-btn weapon-btn">1</button>
+            <button id="touch-weapon2" class="touch-btn weapon-btn">2</button>
+            <button id="touch-weapon3" class="touch-btn weapon-btn">3</button>
+        </div>
+    </div>
 
     <!-- In-Game HUD -->
     <div id="hud" class="hidden">
