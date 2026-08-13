@@ -16,6 +16,7 @@ var tutorialMessages = [];
 var currentWave = 0;
 var levelTimeElapsed = 0;
 var lastFireTime = 0;
+var lastJumpTime = 0;
 var saveMode = 'save';
 var previousScreen = 'start-screen';
 
@@ -425,7 +426,7 @@ function handleMovement() {
     var speed = GameState.speedBoost ? 300 : 200;
     var left = cursors.left.isDown || (aKey && aKey.isDown) || touchState.left;
     var right = cursors.right.isDown || (dKey && dKey.isDown) || touchState.right;
-    var jump = cursors.up.isDown || (wKey && wKey.isDown) || touchState.up || touchState.jumpQueued;
+    var jump = cursors.up.isDown || (wKey && wKey.isDown) || touchState.jumpQueued;
     if (left) {
         player.setVelocityX(-speed);
         player.flipX = true;
@@ -435,9 +436,10 @@ function handleMovement() {
     } else {
         player.setVelocityX(0);
     }
-    if (jump && player.body.touching.down) {
+    if (jump && player.body.touching.down && time - lastJumpTime > 300) {
         player.setVelocityY(-500);
         touchState.jumpQueued = false;
+        lastJumpTime = time;
     }
 }
 
