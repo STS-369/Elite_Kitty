@@ -3,29 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kitty Soldier: Rambo Cat vs. The Rats</title>
+    <title>Elite Kitty - Rambo Cat vs. The Rats</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
 </head>
 <body>
     <div id="game-container"></div>
-    <div id="ui-overlay">
-        <div id="start-screen" class="overlay-screen">
-            <h1>KITTY SOLDIER</h1>
-            <p>Rambo Cat vs. The Rat Infestation</p>
-            <button id="start-btn">DEPLOY MISSION</button>
-            <div class="controls-hint">
-                <p>WASD/ARROWS: Move & Jump</p>
-                <p>SPACE/Z: Fire Yarn Balls</p>
+
+    <!-- In-Game HUD -->
+    <div id="hud" class="hidden">
+        <div class="hud-row">
+            <div class="hud-health">
+                <div id="hud-health-bar" class="hud-bar">
+                    <div id="hud-health-fill" class="hud-bar-fill health"></div>
+                </div>
+                <span id="hud-health-text">100</span>
+            </div>
+            <div id="hud-score" class="hud-score">Score: 0</div>
+            <div id="hud-level" class="hud-level">Lv1</div>
+        </div>
+        <div class="hud-row">
+            <div id="hud-lives" class="hud-lives">♥ ♥ ♥</div>
+            <div id="hud-combo" class="hud-combo" style="display:none">x1 COMBO</div>
+            <div class="hud-right">
+                <span id="hud-weapon" class="hud-weapon">Pistol</span>
+                <span class="hud-sep">|</span>
+                <span id="hud-ammo" class="hud-ammo">∞</span>
             </div>
         </div>
-        <div id="game-over-screen" class="overlay-screen hidden">
-            <h1>MISSION FAILED</h1>
-            <p id="final-score">Score: 0</p>
-            <button id="restart-btn">REDEPLOY</button>
+        <div class="hud-row hud-bottom">
+            <div id="hud-powerups" class="hud-powerups"></div>
+            <div id="hud-wave" class="hud-wave" style="display:none"></div>
+            <div id="hud-stealth" class="hud-stealth" style="display:none">👁 STEALTH</div>
+        </div>
+        <div id="hud-boss-name" class="hud-boss-name" style="display:none">⚔ RAT KING ⚔</div>
+        <div id="hud-boss-bar" class="hud-boss-bar" style="display:none">
+            <div id="hud-boss-fill" class="hud-bar-fill boss"></div>
         </div>
     </div>
+
+    <!-- START SCREEN -->
+    <div id="start-screen" class="overlay-screen">
+        <div class="overlay-content">
+            <h1>🐱 ELITE KITTY</h1>
+            <p class="subtitle">Rambo Cat vs. The Rat Infestation</p>
+            <div class="menu-buttons">
+                <button id="new-game-btn" class="menu-btn primary">NEW GAME</button>
+                <button id="continue-btn" class="menu-btn">CONTINUE</button>
+                <button id="level-select-btn" class="menu-btn">LEVEL SELECT</button>
+                <button id="high-scores-btn" class="menu-btn">HIGH SCORES</button>
+            </div>
+            <div class="controls-hint">
+                <p>WASD / Arrows: Move &amp; Jump</p>
+                <p>SPACE / Z: Fire | 1/2/3: Weapons</p>
+                <p>ESC: Pause</p>
+            </div>
+            <div class="monetization-row">
+                <button id="skins-btn" class="menu-btn small skins">🎨 SKINS</button>
+                <button id="donate-btn" class="menu-btn small donate">☕ Donate</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAUSE MENU -->
+    <div id="pause-screen" class="overlay-screen hidden">
+        <div class="overlay-content">
+            <h2>⏸ PAUSED</h2>
+            <div class="menu-buttons">
+                <button id="resume-btn" class="menu-btn primary">RESUME</button>
+                <button id="save-btn" class="menu-btn">SAVE GAME</button>
+                <button id="load-btn" class="menu-btn">LOAD GAME</button>
+                <button id="pause-level-select-btn" class="menu-btn">LEVEL SELECT</button>
+                <button id="quit-btn" class="menu-btn danger">QUIT TO MENU</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME OVER -->
+    <div id="gameover-screen" class="overlay-screen hidden">
+        <div class="overlay-content">
+            <h1>💀 MISSION FAILED</h1>
+            <div id="gameover-stats" class="stats-panel"></div>
+            <div id="gameover-highscore" class="highscore-badge hidden">🏆 NEW HIGH SCORE!</div>
+            <div class="menu-buttons">
+                <button id="retry-btn" class="menu-btn primary">RETRY LEVEL</button>
+                <button id="gameover-quit-btn" class="menu-btn">QUIT TO MENU</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LEVEL COMPLETE -->
+    <div id="victory-screen" class="overlay-screen hidden">
+        <div class="overlay-content">
+            <h1>⭐ LEVEL COMPLETE ⭐</h1>
+            <div id="victory-stars" class="star-display"></div>
+            <div id="victory-stats" class="stats-panel"></div>
+            <div class="menu-buttons">
+                <button id="next-level-btn" class="menu-btn primary">NEXT LEVEL</button>
+                <button id="victory-level-select-btn" class="menu-btn">LEVEL SELECT</button>
+                <button id="victory-quit-btn" class="menu-btn">QUIT TO MENU</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FINAL VICTORY -->
+    <div id="final-victory-screen" class="overlay-screen hidden">
+        <div class="overlay-content">
+            <h1>🏆 VICTORY! 🏆</h1>
+            <p class="subtitle">You defeated the Rat Infestation!</p>
+            <div id="final-stars" class="star-display large"></div>
+            <div id="final-stats" class="stats-panel"></div>
+            <div class="menu-buttons">
+                <button id="final-menu-btn" class="menu-btn primary">MAIN MENU</button>
+                <button id="final-replay-btn" class="menu-btn">PLAY AGAIN</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LEVEL SELECT -->
+    <div id="level-select-screen" class="overlay-screen hidden">
+        <div class="overlay-content wide">
+            <h2>📍 SELECT LEVEL</h2>
+            <div id="level-grid" class="level-grid"></div>
+            <button id="level-select-back-btn" class="menu-btn">← BACK</button>
+        </div>
+    </div>
+
+    <!-- SAVE / LOAD -->
+    <div id="save-load-screen" class="overlay-screen hidden">
+        <div class="overlay-content wide">
+            <h2 id="save-load-title">💾 SAVE GAME</h2>
+            <div id="save-slots" class="save-slots"></div>
+            <button id="save-load-back-btn" class="menu-btn">← BACK</button>
+        </div>
+    </div>
+
+    <!-- HIGH SCORES -->
+    <div id="high-scores-screen" class="overlay-screen hidden">
+        <div class="overlay-content wide">
+            <h2>🏆 HIGH SCORES</h2>
+            <div id="high-score-list" class="high-score-list"></div>
+            <button id="high-scores-back-btn" class="menu-btn">← BACK</button>
+        </div>
+    </div>
+
+    <!-- SKINS SHOP -->
+    <div id="skins-screen" class="overlay-screen hidden">
+        <div class="overlay-content wide">
+            <h2>🎨 SKIN SHOP</h2>
+            <div id="coins-display" class="coins-display">🪙 0 coins</div>
+            <div id="skin-grid" class="skin-grid"></div>
+            <button id="skins-back-btn" class="menu-btn">← BACK</button>
+        </div>
+    </div>
+
+    <!-- AD PLACEHOLDER -->
+    <div id="ad-screen" class="overlay-screen hidden">
+        <div class="overlay-content">
+            <div class="ad-placeholder">
+                <p class="ad-label">📺 ADVERTISEMENT</p>
+                <div class="ad-box">
+                    <p>Ad would display here</p>
+                    <p class="ad-small">Premium removes ads</p>
+                </div>
+                <p id="ad-timer" class="ad-timer">Skip in 3...</p>
+                <button id="ad-close-btn" class="menu-btn hidden">SKIP →</button>
+            </div>
+        </div>
+    </div>
+
     <script src="levels.js"></script>
+    <script src="save-system.js"></script>
     <script src="kitty-soldier.js"></script>
 </body>
 </html>
