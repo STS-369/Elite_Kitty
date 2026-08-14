@@ -446,7 +446,7 @@ function handleMovement(time) {
     } else {
         player.setVelocityX(0);
     }
-    if (jump && player.body.touching.down && time - lastJumpTime > 300) {
+    if (jump && (player.body.touching.down || player.body.blocked.down || player.body.onFloor()) && time - lastJumpTime > 300) {
         player.setVelocityY(-500);
         touchState.jumpQueued = false;
         lastJumpTime = time;
