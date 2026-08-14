@@ -4,7 +4,7 @@
 
 // ---- Global Variables ----
 var game, scene;
-var player, platforms, movingPlatforms, bullets, enemies, powerupItems, boss;
+var player, platforms, movingPlatforms, bullets, enemies, coins, powerupItems, boss;
 var cursors, fireKey, pauseKey;
 var wKey, aKey, dKey, k1, k2, k3;
 var texturesGenerated = false;
@@ -200,6 +200,13 @@ function generateTextures(sc) {
         g.fillStyle(pu.color, 0.6); g.fillCircle(10, 10, 5);
         g.generateTexture('powerup_' + key, 20, 20); g.destroy();
     }
+
+    // Coin texture
+    g = sc.make.graphics({ add: false });
+    g.fillStyle(0xffcc00); g.fillCircle(10, 10, 10);
+    g.fillStyle(0xffee44); g.fillCircle(10, 10, 7);
+    g.fillStyle(0xffdd22); g.fillCircle(9, 9, 4);
+    g.generateTexture('coin', 20, 20); g.destroy();
 }
 
 // ---- Phaser Config ----
@@ -217,7 +224,7 @@ var config = {
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 800 },
+            gravity: { y: 600 },
             debug: false
         }
     },
@@ -277,6 +284,7 @@ function create() {
     movingPlatforms = this.physics.add.group();
     bullets = this.physics.add.group({ defaultKey: 'bullet', maxSize: 30 });
     enemies = this.physics.add.group();
+    coins = this.physics.add.group();
     powerupItems = this.physics.add.group();
     boss = null;
 
@@ -331,6 +339,7 @@ function doSetupLevel() {
     movingPlatforms.clear(true, true);
     bullets.clear(true, true);
     enemies.clear(true, true);
+    coins.clear(true, true);
     powerupItems.clear(true, true);
     if (boss) { if (boss.attackEvent) boss.attackEvent.destroy(); boss.destroy(); boss = null; }
 
@@ -394,6 +403,7 @@ function doSetupLevel() {
     scene.physics.add.overlap(bullets, enemies, handleBulletHitEnemy, null, scene);
     scene.physics.add.overlap(bullets, boss, handleBulletHitBoss, null, scene);
     scene.physics.add.overlap(player, powerupItems, collectPowerup, null, scene);
+    scene.physics.add.overlap(player, coins, collectCoin, null, scene);
 
     // Spawn enemies
     if (level.hasBoss) {
@@ -447,7 +457,7 @@ function handleMovement(time) {
         player.setVelocityX(0);
     }
     if (jump && (player.body.touching.down || player.body.blocked.down || player.body.onFloor()) && time - lastJumpTime > 300) {
-        player.setVelocityY(-500);
+        player.setVelocityY(-700);
         touchState.jumpQueued = false;
         lastJumpTime = time;
     }
@@ -730,6 +740,24 @@ function killEnemy(enemy, isSilent) {
 
     spawnDeathParticles(enemy.x, enemy.y, 0x888888);
 
+    // Drop coins at death location
+    var coinCount = Phaser.Math.Between(1, 3);
+    for (var ci = 0; ci < coinCount; ci++) {
+        var coin = coins.create(
+            enemy.x + Phaser.Math.Between(-20, 20),
+            enemy.y,
+            'coin'
+        );
+        coin.setBounce(0.4);
+        coin.setCollideWorldBounds(true);
+        coin.body.allowGravity = true;
+        coin.setVelocity(Phaser.Math.Between(-80, 80), Phaser.Math.Between(-200, -100));
+        // Auto-destroy coins after 10 seconds
+        scene.time.delayedCall(10000, function(c) {
+            return function() { if (c && c.active) c.destroy(); };
+        })(coin);
+    }
+
     if (Math.random() < (level.powerupChance || 0.3)) {
         spawnPowerup(enemy.x, enemy.y);
     }
@@ -840,6 +868,23 @@ function collectPowerup(playerObj, powerup) {
         onComplete: function() { flash.destroy(); }
     });
     powerup.destroy();
+}
+
+// ---- Coin Collection ----
+function collectCoin(playerObj, coin) {
+    if (!coin.active) return;
+    GameState.score += 10;
+    showFloatingText(coin.x, coin.y - 15, '+10', '#ffcc00', 14, 600);
+    // Credit earnings for coin pickup
+    if (typeof CreditWallet !== 'undefined') {
+        CreditWallet.earnOnCoin();
+    }
+    var flash = scene.add.circle(coin.x, coin.y, 8, 0xffcc00, 0.6);
+    scene.tweens.add({
+        targets: flash, alpha: 0, scale: 2, duration: 200,
+        onComplete: function() { flash.destroy(); }
+    });
+    coin.destroy();
 }
 
 // ---- Level Progression ----

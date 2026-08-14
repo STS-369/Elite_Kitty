@@ -179,6 +179,11 @@ var CreditWallet = {
         showCreditPopup(amount, 'Boss Defeated!');
     },
 
+    earnOnCoin: function() {
+        var amount = 5;
+        this.addCredits(amount, 'Coin Pickups');
+    },
+
     // ---- HUD Update ----
     updateHUDCredits: function() {
         var el = document.getElementById('hud-credits');
