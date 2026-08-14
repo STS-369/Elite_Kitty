@@ -292,7 +292,7 @@ function update(time, delta) {
     levelTimeElapsed += delta;
     GameState.timePlayed += delta;
 
-    handleMovement();
+    handleMovement(time);
     handleShooting(time);
     handleWeaponSwitch();
     updateEnemyAI(time);
@@ -368,6 +368,16 @@ function doSetupLevel() {
         }
     }
 
+    // Destroy old player sprite to prevent leftover physics bodies
+    if (player) {
+        if (player.body) player.body.enable = false;
+        player.destroy();
+        player = null;
+    }
+
+    // Remove old physics constraints to prevent accumulation across level loads
+    scene.physics.world.colliders.destroy();
+
     // Player
     player = scene.physics.add.sprite(100, 450, 'player');
     player.setBounce(0.05);
@@ -422,7 +432,7 @@ function doSetupLevel() {
 
 // ---- Movement ----
 // ---- Movement ----
-function handleMovement() {
+function handleMovement(time) {
     var speed = GameState.speedBoost ? 300 : 200;
     var left = cursors.left.isDown || (aKey && aKey.isDown) || touchState.left;
     var right = cursors.right.isDown || (dKey && dKey.isDown) || touchState.right;
