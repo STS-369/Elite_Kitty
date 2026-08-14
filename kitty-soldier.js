@@ -753,9 +753,9 @@ function killEnemy(enemy, isSilent) {
         coin.body.allowGravity = true;
         coin.setVelocity(Phaser.Math.Between(-80, 80), Phaser.Math.Between(-200, -100));
         // Auto-destroy coins after 10 seconds
-        scene.time.delayedCall(10000, function(c) {
-            return function() { if (c && c.active) c.destroy(); };
-        })(coin);
+        window.setTimeout(function(c) {
+            if (c && c.active) c.destroy();
+        }, 10000)(coin);
     }
 
     if (Math.random() < (level.powerupChance || 0.3)) {
