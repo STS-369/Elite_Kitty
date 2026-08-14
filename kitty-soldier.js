@@ -385,7 +385,6 @@ function doSetupLevel() {
     }
 
     // Remove old physics constraints to prevent accumulation across level loads
-    scene.physics.world.colliders.destroy();
 
     // Player
     player = scene.physics.add.sprite(100, 450, 'player');
@@ -401,7 +400,7 @@ function doSetupLevel() {
     scene.physics.add.collider(enemies, movingPlatforms);
     scene.physics.add.overlap(player, enemies, handleEnemyCollision, null, scene);
     scene.physics.add.overlap(bullets, enemies, handleBulletHitEnemy, null, scene);
-    scene.physics.add.overlap(bullets, boss, handleBulletHitBoss, null, scene);
+    if (boss) { scene.physics.add.overlap(bullets, boss, handleBulletHitBoss, null, scene); }
     scene.physics.add.overlap(player, powerupItems, collectPowerup, null, scene);
     scene.physics.add.overlap(player, coins, collectCoin, null, scene);
 
