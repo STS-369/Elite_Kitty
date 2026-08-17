@@ -195,6 +195,16 @@ const GameState = {
         this.damageBoost = false;
         this.speedBoost = false;
         this.powerupTimers = {};
+        this.damageBonus = 0;
+        this.speedUpgradeBonus = 0;
+        this.ammoMultiplier = 1;
+        this.critChance = 0;
+        this.hasAutoRevive = false;
+        this.autoReviveUsed = false;
+        // Reset permanent upgrade application flag
+        if (typeof _permanentUpgradeApplied !== 'undefined') {
+            _permanentUpgradeApplied = false;
+        }
     },
 
     resetForLevel() {

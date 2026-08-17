@@ -19,6 +19,7 @@ var lastFireTime = 0;
 var lastJumpTime = 0;
 var saveMode = 'save';
 var previousScreen = 'start-screen';
+var activeColliders = [];
 
 // ---- Mobile Detection & Touch State ----
 var isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || ('ontouchstart' in window);
@@ -296,17 +297,27 @@ function create() {
 
 function update(time, delta) {
     if (!gameRunning || gamePaused || !player || !player.body || levelCompletePending) return;
-
     levelTimeElapsed += delta;
     GameState.timePlayed += delta;
-
     handleMovement(time);
     handleShooting(time);
     handleWeaponSwitch();
     updateEnemyAI(time);
     updateBossAI(time);
+    cleanupBullets();
     checkLevelComplete();
     updateGameUI();
+}
+
+// ---- Bullet Cleanup ----
+function cleanupBullets() {
+    bullets.children.iterate(function(bullet) {
+        if (!bullet || !bullet.active) return;
+        // Destroy bullets that go off-screen
+        if (bullet.x < -50 || bullet.x > 850 || bullet.y < -50 || bullet.y > 650) {
+            bullet.destroy();
+        }
+    });
 }
 
 // ---- Level Setup ----
@@ -317,6 +328,15 @@ function doSetupLevel() {
     tutorialIndex = 0;
     currentWave = 0;
     levelCompletePending = false;
+
+    // Remove old physics colliders to prevent accumulation across level loads
+    for (var c = 0; c < activeColliders.length; c++) {
+        if (activeColliders[c]) {
+            activeColliders[c].destroy();
+        }
+    }
+    activeColliders = [];
+
     // Apply permanent credit upgrades
     if (typeof applyPermanentUpgrades === 'function') {
         applyPermanentUpgrades();
@@ -394,15 +414,18 @@ function doSetupLevel() {
     player.body.setOffset(6, 4);
 
     // Collisions
-    scene.physics.add.collider(player, platforms);
-    scene.physics.add.collider(player, movingPlatforms);
-    scene.physics.add.collider(enemies, platforms);
-    scene.physics.add.collider(enemies, movingPlatforms);
-    scene.physics.add.overlap(player, enemies, handleEnemyCollision, null, scene);
-    scene.physics.add.overlap(bullets, enemies, handleBulletHitEnemy, null, scene);
-    if (boss) { scene.physics.add.overlap(bullets, boss, handleBulletHitBoss, null, scene); }
-    scene.physics.add.overlap(player, powerupItems, collectPowerup, null, scene);
-    scene.physics.add.overlap(player, coins, collectCoin, null, scene);
+    activeColliders.push(scene.physics.add.collider(player, platforms));
+    activeColliders.push(scene.physics.add.collider(player, movingPlatforms));
+    activeColliders.push(scene.physics.add.collider(enemies, platforms));
+    activeColliders.push(scene.physics.add.collider(enemies, movingPlatforms));
+    activeColliders.push(scene.physics.add.overlap(player, enemies, handleEnemyCollision, null, scene));
+    activeColliders.push(scene.physics.add.overlap(bullets, enemies, handleBulletHitEnemy, null, scene));
+    if (boss) { activeColliders.push(scene.physics.add.overlap(bullets, boss, handleBulletHitBoss, null, scene)); }
+    activeColliders.push(scene.physics.add.overlap(player, powerupItems, collectPowerup, null, scene));
+    activeColliders.push(scene.physics.add.overlap(player, coins, collectCoin, null, scene));
+    // Bullets collide with terrain (walls, platforms)
+    activeColliders.push(scene.physics.add.collider(bullets, platforms, handleBulletHitTerrain, null, scene));
+    activeColliders.push(scene.physics.add.collider(bullets, movingPlatforms, handleBulletHitTerrain, null, scene));
 
     // Spawn enemies
     if (level.hasBoss) {
@@ -573,8 +596,8 @@ function spawnBoss() {
     boss.setCollideWorldBounds(true);
     boss.body.setSize(36, 44);
     boss.body.setOffset(6, 4);
-    boss.health = LevelData[3].bossHealth;
-    boss.maxHealth = LevelData[3].bossHealth;
+    boss.health = LevelData[GameState.currentLevel].bossHealth;
+    boss.maxHealth = LevelData[GameState.currentLevel].bossHealth;
     boss.attacking = false;
     scene.physics.add.collider(boss, platforms);
     scene.physics.add.collider(boss, movingPlatforms);
@@ -600,7 +623,10 @@ function bossAttack() {
 function updateBossAI(time) {
     if (!boss || !boss.active) return;
     if (Phaser.Math.Distance.Between(player.x, player.y, boss.x, boss.y) < 44) {
-        handleDamage(15);
+        var now = scene.time.now;
+        if (now - lastDamageTime >= INVINCIBILITY_DURATION) { // Only damage if not invincible
+            handleDamage(15);
+        }
     }
 }
 
@@ -648,21 +674,32 @@ function updateEnemyAI(time) {
 }
 
 // ---- Damage System ----
+var lastDamageTime = 0;
+var INVINCIBILITY_DURATION = 1000; // 1 second i-frames
+
 function handleEnemyCollision(playerObj, enemy) {
     if (!enemy.active) return;
+    var now = scene.time.now;
+    if (now - lastDamageTime < INVINCIBILITY_DURATION) return; // Invincibility frames active
     handleDamage(10);
 }
 
 function handleDamage(amount) {
+    var now = scene.time.now;
+    if (now - lastDamageTime < INVINCIBILITY_DURATION) return; // Invincibility frames active
+    
     if (GameState.shieldHits > 0) {
         GameState.shieldHits--;
         showFloatingText(player.x, player.y - 20, 'SHIELD!', '#0088ff', 20, 600);
         player.setTint(0x0088ff);
         scene.time.delayedCall(200, function() { if (player.active) player.clearTint(); });
+        lastDamageTime = now;
         return;
     }
 
     GameState.health -= amount;
+    lastDamageTime = now;
+    
     if (GameState.health <= 0) {
         GameState.health = 0;
         GameState.lives--;
@@ -682,6 +719,11 @@ function handleDamage(amount) {
 }
 
 // ---- Bullet Hit Enemy ----
+function handleBulletHitTerrain(bullet, terrain) {
+    if (!bullet || !bullet.active) return;
+    bullet.destroy();
+}
+
 function handleBulletHitEnemy(bullet, enemy) {
     if (!bullet.active || !enemy.active) return;
     var level = LevelData[GameState.currentLevel];

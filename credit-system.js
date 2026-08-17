@@ -390,26 +390,60 @@ function buyStoreItem(itemId, section) {
 }
 
 // ---- Apply Permanent Upgrades ----
+// Store base values to prevent stacking on retries/level restarts
+var _permanentUpgradeApplied = false;
+var _baseDamageBonus = 0;
+var _baseMaxHealth = 100;
+var _baseSpeedBonus = 0;
+var _baseAmmoMultiplier = 1;
+var _baseCritChance = 0;
+var _baseAutoRevive = false;
+
 function applyPermanentUpgrades() {
+    // Only apply base values once per new game session
+    if (_permanentUpgradeApplied) {
+        // Just restore the already-applied permanent bonuses
+        return;
+    }
+    
     var upgrades = CreditWallet.getUpgrades();
+    
+    // Calculate permanent bonuses from upgrades
+    _baseDamageBonus = 0;
+    _baseMaxHealth = 100;
+    _baseSpeedBonus = 0;
+    _baseAmmoMultiplier = 1;
+    _baseCritChance = 0;
+    _baseAutoRevive = false;
+    
     if (upgrades['upgrade_damage']) {
-        GameState.damageBonus = (GameState.damageBonus || 0) + 0.25;
+        _baseDamageBonus = 0.25;
     }
     if (upgrades['upgrade_health']) {
-        GameState.maxHealth = (GameState.maxHealth || 100) + 25;
+        _baseMaxHealth = 125;
     }
     if (upgrades['upgrade_speed']) {
-        GameState.speedUpgradeBonus = (GameState.speedUpgradeBonus || 0) + 50;
+        _baseSpeedBonus = 50;
     }
     if (upgrades['upgrade_ammo']) {
-        GameState.ammoMultiplier = (GameState.ammoMultiplier || 1) + 0.5;
+        _baseAmmoMultiplier = 1.5;
     }
     if (upgrades['upgrade_crit']) {
-        GameState.critChance = (GameState.critChance || 0) + 0.15;
+        _baseCritChance = 0.15;
     }
     if (upgrades['upgrade_revive']) {
-        GameState.hasAutoRevive = true;
+        _baseAutoRevive = true;
     }
+    
+    // Apply base values (not additive)
+    GameState.damageBonus = _baseDamageBonus;
+    GameState.maxHealth = _baseMaxHealth;
+    GameState.speedUpgradeBonus = _baseSpeedBonus;
+    GameState.ammoMultiplier = _baseAmmoMultiplier;
+    GameState.critChance = _baseCritChance;
+    GameState.hasAutoRevive = _baseAutoRevive;
+    
+    _permanentUpgradeApplied = true;
 }
 
 // ---- Check for Auto-Revive on Death ----
